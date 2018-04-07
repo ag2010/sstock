@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProductCategoryMapper"> 
+ 	<resultMap type="ProductCategory" id="ProductCategory">
+		<result property="categoryId" column="categoryId"/>
+		<result property="categoryName" column="categoryName" />
+		<result property="parentId" column="parentId" />
+		<result property="status" column="status" />
+		<result property="sort" column="sort" />
+		<result property="remark" column="remark" /> 
+	</resultMap>
+
+	<select id="queryProductCategory" resultMap="ProductCategory">
+		SELECT a.*,b.categoryName parentName FROM pro_category a 
+			left join pro_category b on a.parentId=b.categoryId order by sort
+	</select>
+	 
+	
+	<select id="findProductCategoryByPid" parameterType="String" resultType="ProductCategory">
+		SELECT * FROM pro_category WHERE parentId = #{parentId}  ORDER BY sort ASC
+	</select>
+	 
+	<!-- 插入商品分类信息 -->
+ 	<insert id="insertProductCategory" parameterType="ProductCategory">
+ 		insert into pro_category(
+ 			<if test="categoryId != null and categoryId != ''">categoryId,</if>
+ 			<if test="categoryName != null and categoryName != ''">categoryName,</if>
+ 			<if test="parentId != null and parentId != ''">parentId,</if> 
+ 			<if test="status != null and status != ''">status,</if>
+ 			<if test="sort != null and sort != ''">sort,</if>
+ 			<if test="remark != null and remark != ''">remark,</if> 
+ 			addTime
+ 		)values(
+ 			<if test="categoryId != null and categoryId != ''">#{categoryId},</if>
+ 		    <if test="categoryName != null and categoryName != ''">#{categoryName},</if>
+ 			<if test="parentId != null and parentId != ''">#{parentId},</if>
+ 			<if test="status != null and status != ''">#{status},</if>
+ 			<if test="sort != null and sort != ''">#{sort},</if>
+ 			<if test="remark != null and remark != ''">#{remark},</if> 
+ 			#{addTime}
+ 		)
+ 	</insert>
+ 	
+ 
+ 	
+ 	<!-- 修改商品分类信息 -->
+	<update id="updateProductCategory" parameterType="ProductCategory">
+		update pro_category
+		<set>
+			<if test="categoryName != null and categoryName != ''">categoryName = #{categoryName}</if>
+			<if test="parentId != null and parentId != ''">,parentId = #{parentId}</if>
+			<if test="status != null ">,status = #{status}</if>
+			<if test="sort != null ">,sort = #{sort}</if>
+			<if test="remark != null and remark != ''">,remark = #{remark}</if> 
+			,updateTime = #{updateTime}
+		</set>
+		where 1=1
+		<if test="categoryId != null and categoryId  != ''">and categoryId = #{categoryId}</if>
+ 	</update>
+ 	
+ 	<!-- 删除商品分类信息 -->
+ 	<delete id="deleteProductCategory" parameterType="ProductCategory">
+ 		delete from pro_category where 1=1
+ 		<if test="categoryId != null and categoryId  != ''">and categoryId = #{categoryId}</if>
+ 		<if test="parentId != null and parentId  != ''">and parentId = #{parentId}</if>
+ 	</delete>
+	 
+</mapper> 

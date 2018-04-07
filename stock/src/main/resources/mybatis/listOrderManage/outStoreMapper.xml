@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OutStoreMapper">
+
+	<resultMap type="OutStore" id="outStoreResult">  
+		<result property="id" column="id" />
+		<result property="outStoreTime" column="outStoreTime" />
+	    <result property="status" column="status" />
+		<result property="type" column="type" />
+		<result property="deliveryId" column="deliveryId" />
+		<result property="storeId" column="storeId" />
+		<result property="remark" column="remark" />
+		<result property="addTime" column="addTime" />
+		<result property="updateTime" column="updateTime" />
+		<result property="storeName" column="storeName"/>
+		
+		<association property="store" javaType="Stores">
+					<id property="id" column="id"/>
+					<result property="storeName" column="storeName"/>
+					<result column="address" property="address" />
+		</association>
+	</resultMap>
+
+
+
+	<select id="pageInfoQuery" parameterType="PageUtilEntity" resultType="OutStore" useCache="false">
+									SELECT 
+											  s.id,
+											  s.addTime,
+											  s.status,
+											  s.type,
+											  t.storeName,
+											  s.deliveryId,
+											  s.remark 
+											FROM
+											  list_outStore s 
+											  LEFT JOIN stores t 
+											    ON s.storeId = t.id 
+											WHERE 1 = 1 
+		<if test="relationMap.allname != null and relationMap.allname != ''"><!-- 关键词检索 -->
+			AND
+				(
+					 s.id LIKE CONCAT(CONCAT('%', #{relationMap.allname }),'%')
+					 OR 
+					 s.deliveryId LIKE CONCAT(CONCAT('%', #{relationMap.allname }),'%')
+				)
+		</if>
+			<if test="relationMap.beginTime != null and relationMap.beginTime != ''"><!-- 开始时间检索 -->
+			AND DATE_FORMAT( s.addTime,'%Y%m%d') &gt;= DATE_FORMAT(#{relationMap.beginTime},'%Y%m%d')
+		</if>
+		<if test="relationMap.endTime != null and relationMap.endTime != ''"><!-- 结束时间检索 -->
+			AND DATE_FORMAT( s.addTime,'%Y%m%d') &lt;= DATE_FORMAT(#{relationMap.endTime},'%Y%m%d')
+		</if>
+		<if test="relationMap.status != null and relationMap.status != ''">
+			AND s.status=#{relationMap.status}
+		</if>
+		order by s.addTime DESC 
+	</select>
+	
+	<select id="findOutStoreById" parameterType="String" resultType="OutStore">
+				SELECT 
+						  s.id,
+						  s.addTime,
+						  s.status,
+						  s.type,
+						  t.storeName,
+						  s.deliveryId,
+						  s.remark 
+						FROM
+						  list_outStore s 
+						  LEFT JOIN stores t 
+						    ON s.storeId = t.id 
+				WHERE s.id=#{Id}
+	</select>
+	
+	
+	<select id="getExpPurchaseList" parameterType="PageUtilEntity" resultType="OutStore" useCache="false">
+							SELECT 
+									  s.id,
+									  s.addTime,
+									  s.status,
+									  s.type,
+									  t.storeName,
+									  s.deliveryId,
+									  s.remark 
+									FROM
+									  list_outStore s 
+									  LEFT JOIN stores t 
+									    ON s.storeId = t.id 
+									WHERE 1 = 1
+	</select>
+ 
+ <!-- 添加出库单信息 -->
+     <insert id="addOutStore" parameterType="OutStore"  useGeneratedKeys="true"  keyProperty="id">
+ 		insert into list_outStore(
+ 	     	<if test="id != null and id != ''">id,</if>
+ 			<if test="outStoreTime != null">outStoreTime,</if>
+ 			<if test="status != null and status != ''">status,</if>
+ 			<if test="type != null and type != ''">type,</if>
+ 			<if test="deliveryId != null and deliveryId != ''">deliveryId,</if>
+ 			<if test="storeId != null and storeId != ''">storeId,</if>
+ 			<if test="remark !=null and remark != ''">remark,</if>
+ 			<if test="addTime !=null">addTime</if>
+ 		)values(
+ 		     <if test="id != null and id != ''">#{id},</if>
+ 			<if test="outStoreTime != null">#{outStoreTime},</if>
+ 			<if test="status != null and status != ''">#{status},</if>
+ 			<if test="type != null and type != ''">#{type},</if>
+ 			<if test="deliveryId != null and deliveryId != ''">#{deliveryId},</if>
+ 			<if test="storeId !=null and storeId != ''">#{storeId},</if>
+ 			<if test="remark != null and remark != ''">#{remark},</if>
+ 			<if test="addTime !=null">#{addTime}</if>
+ 		)
+ 	</insert> 
+ 
+ <!-- 修改出库单状态 -->
+    <update id="chagneOutStoreStatus">
+         update list_outStore
+         <set>
+          <if test="status !=null and status != ''">status =#{status},</if>
+           <if test="updateTime !=null">updateTime=#{updateTime}</if>
+         </set>
+         where id = #{id} 
+       <!--   <if test="id != null and id  != ''">and id = #{id}</if> -->
+    </update>
+    
+    
+    <!-- 出库单号生成-->
+     <select id="getOutStoreMaxNo" parameterType="java.util.Map"   resultType="String" useCache="false">
+		<!-- SELECT max(id) from  list_outStore  WHERE id like CONCAT(#{id_head},'%') and DateDiff(addTime,#{date})=0 -->
+				SELECT SUBSTRING(MAX(id),13) FROM list_outStore
+	</select> 
+	
+	<!-- 出库库存更改 -->
+		<update id="updateProStock"  parameterType="java.util.List">   
+          <foreach collection="list" item="item" index="index" open="" close="" separator=";">  
+                update pro   
+                <set>  
+                   stock=stock-#{item.number}  
+                </set>  
+                where barCode = #{item.barCode}  
+         </foreach>              
+    </update>  
+    
+    	<insert id="saveOutStoreOrders" parameterType="java.util.List"> 
+ 		insert into orders ( 
+ 			id,barCode,number,remark,objId,objType,addTime)
+ 			values
+ 			<foreach collection="list" item="item" index="index" separator=",">
+ 			( #{item.id},#{item.barCode},#{item.number},#{item.remark},#{item.objId},
+ 			#{item.objType},#{item.addTime})
+			</foreach>
+ 	</insert>
+</mapper> 

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProductMapper">  
+	  <resultMap id="ProductResult" type="Product" >
+	    <id column="productId" property="productId" jdbcType="VARCHAR" />
+	    <result column="code" property="code" jdbcType="VARCHAR" />
+	    <result column="productName" property="productName" jdbcType="VARCHAR" />
+	    <result column="barCode" property="barCode" jdbcType="VARCHAR" />
+	    <result column="stock" property="stock" jdbcType="VARCHAR" />
+	    <result column="unit" property="unit" jdbcType="VARCHAR" />
+	    <result column="salePrice" property="salePrice" jdbcType="VARCHAR" />
+	    <result column="purchasePrice" property="purchasePrice" jdbcType="VARCHAR" /> 
+	  </resultMap>
+
+	<select id="productpageInfoQuery" parameterType="PageUtilEntity" resultType="Product" useCache="false">
+		SELECT a.*,b.categoryName FROM pro a left join pro_category b on a.categoryId=b.categoryId  WHERE 1=1
+		<if test="relationMap.codeOrName != null and relationMap.codeOrName != ''">
+			AND
+			(
+			a.productName LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			OR
+			a.code LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			OR
+			a.barCode LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			)
+		</if>
+		<if test="relationMap.categoryId != null and relationMap.categoryId != ''">
+			AND a.categoryId = #{relationMap.categoryId}
+		</if>
+		<if test="relationMap.status != null and relationMap.status != ''"> 
+			AND a.status= #{relationMap.status}
+		</if> 
+	</select>
+	
+	<select id="getExpProductList" parameterType="java.util.Map" resultType="Product" useCache="false">
+		SELECT a.productId,a.code,a.productName,a.barCode,b.categoryName,
+				a.stock,a.unit,a.salePrice,a.purchasePrice ,a.origin
+		 FROM pro a left join pro_category b on a.categoryId=b.categoryId  WHERE 1=1  
+		 <if test="codeOrName != null and codeOrName != ''">
+			AND
+			(
+			a.productName LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			OR
+			a.code LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			OR
+			a.barCode LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			)
+		</if>
+		<if test="categoryId != null and categoryId != ''">
+			AND a.categoryId = #{categoryId}
+		</if>
+		<if test="status != null and status != ''"> 
+			AND a.status= #{status}
+		</if> 
+		
+	</select>
+	<select id="queryStock" parameterType="java.lang.String" resultType="String" useCache="false">
+		SELECT stock FROM pro WHERE barCode = #{barCode}
+	</select>
+
+	<select id="getProductById" parameterType="java.lang.String" resultType="Product" useCache="false">
+		SELECT  a.*,b.categoryName FROM pro a left join pro_category b on a.categoryId=b.categoryId  WHERE a.productId = #{productId} 
+	</select> 
+	
+	<select id="getProductByBarCode" parameterType="java.lang.String" resultType="Product" useCache="false">
+		SELECT  a.*,b.categoryName FROM pro a left join pro_category b on a.categoryId=b.categoryId  WHERE a.barCode = #{barCode} 
+	</select>  
+	
+	<select id="getProAreaOptions"  resultType="SysCode" useCache="false">
+		SELECT  name as codeid,name as codevalue FROM sys_dictionary 
+		 WHERE typeCode = 'area' and  name!= '商品产地'
+	</select>
+	<select id="getProUnitOptions"  resultType="SysCode" useCache="false">
+		SELECT  name as codeid,name as codevalue FROM sys_dictionary 
+		 WHERE typeCode = 'unit' and  name!= '商品单位'
+	</select>
+	<select id="getProTypeOptions"  resultType="SysCode" useCache="false">
+		SELECT categoryId as codeid,categoryName as codevalue FROM pro_category where parentId='0' 
+	</select>
+	<select id="getProSupplierOptions"  resultType="SysCode" useCache="false">
+		SELECT id as codeid,name as codevalue FROM supplier  where status ='1'
+	</select>   
+	<select id="getProNameOptions"  resultType="SysCode" useCache="false">
+		SELECT barCode as codeid,productName as codevalue FROM pro   
+	</select>
+	<select id="getProStoreOptions"  resultType="SysCode" useCache="false">
+		SELECT id as codeid,storeName as codevalue FROM stores   where status ='1' 
+	</select>  
+	
+	 
+	
+	<insert id="addProduct" parameterType="Product">
+ 		insert into pro ( 
+ 			status,code,barCode,productName,unit,expiryDate,origin,spec,storageCondition,img,categoryId,
+			level,characteristic,salePrice,purchasePrice,stock,supplierId,stockTop,stockDown,remark,
+			productId,storesId,addTime)
+ 			values(
+ 			#{status},#{code},#{barCode},#{productName},#{unit},#{expiryDate},#{origin},#{spec},#{storageCondition},#{img},#{categoryId},
+			#{level},#{characteristic},#{salePrice},#{purchasePrice},#{stock},#{supplierId},#{stockTop},#{stockDown},#{remark},
+			#{productId},#{storesId},#{addTime})
+ 	</insert>
+ 	
+ 	<update id="editProduct" parameterType="Product">
+ 		update pro
+ 		<set>
+ 			status = #{status},
+ 			code = #{code},
+ 			barCode = #{barCode},
+ 			productName = #{productName},
+ 			unit = #{unit},
+ 			expiryDate = #{expiryDate},
+ 			origin = #{origin},
+ 			img = #{img},
+ 			spec = #{spec},
+ 			storageCondition = #{storageCondition},
+ 			categoryId = #{categoryId},
+ 			level = #{level},
+ 			characteristic = #{characteristic},
+ 			salePrice = #{salePrice},
+ 			purchasePrice = #{purchasePrice},
+ 			stock = #{stock},
+ 			supplierId = #{supplierId},
+ 			stockTop = #{stockTop},
+ 			stockTop = #{stockTop},
+ 			stockDown = #{stockDown},
+ 			remark = #{remark},
+ 			updateTime=#{updateTime}
+ 		</set>
+ 		where  productId = #{productId} 
+ 	</update>
+ 	 
+ 	<delete id="deleteProduct" parameterType="Product" >
+ 		delete from pro where productId = #{productId}
+ 	</delete>
+ 	
+ 	<!-- 导入商品信息 -->
+ 	<!-- "no","code","productName","barCode","stock","unit","salePrice","purchasePrice",
+    "origin","spec","storageCondition","level","stockTop","stockDown","expiryDate",
+    "characteristic","remark","status","addTime","categoryName","supplierName","storesName" --> 
+    	
+ 	<insert id="impProductList" parameterType="java.util.List">
+ 		insert into pro ( 
+ 			productId,code,productName,barCode,stock,unit,salePrice,purchasePrice,
+ 			origin,spec,storageCondition,level,stockTop,stockDown,expiryDate,
+ 			characteristic,remark,status,addTime,categoryId,supplierId,storesId 
+ 			)
+ 			values
+ 			<foreach collection="list" item="item" index="index" separator=",">
+ 			( #{item.productId},#{item.code},#{item.productName},#{item.barCode},#{item.stock},#{item.unit},#{item.salePrice},#{item.purchasePrice},
+ 			  #{item.origin},#{item.spec},#{item.storageCondition},#{item.level},#{item.stockTop},#{item.stockDown},#{item.expiryDate},
+ 			  #{item.characteristic},#{item.remark},#{item.status},#{item.addTime}, 
+			(select max(categoryId) from pro_category where categoryName = #{item.categoryName}),
+ 			(select max(id) from supplier  where name = #{item.supplierName}) ,
+ 			(select max(id) from stores  where storeName = #{item.storesName}) )
+			</foreach>
+ 	</insert>  
+ 	
+ 	  
+ 	<select id="getDictionaryMap"  resultType="java.util.Map" parameterType="String" useCache="false">
+		select e.name thirdLevel,f.secondLevel,f.firstLevel from sys_dictionary e left join 
+		(select c.name secondLevel,c.dictionaryId,d.name firstLevel from sys_dictionary c left join 
+		(select a.name,a.dictionaryId from sys_dictionary a left join  
+		(select dictionaryId from sys_dictionary where typeCode=#{typeCode} and parentId=(select dictionaryId from sys_dictionary where parentId='0')) 
+		 b on a.parentId=b.dictionaryId where a.typeCode=#{typeCode})
+		 d on c.parentId=d.dictionaryId where c.typeCode=#{typeCode})
+		 f on e.parentId=f.dictionaryId where e.typeCode=#{typeCode}  
+	</select> 
+	
+	<select id="getAllProduct"  resultType="Product"  useCache="false">
+		select * from  pro
+	</select> 
+	
+ 	 
+</mapper> 

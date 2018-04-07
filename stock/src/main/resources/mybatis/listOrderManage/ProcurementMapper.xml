@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ProcurementMapper">   
+
+	<select id="procurementpageInfoQuery" parameterType="PageUtilEntity" resultType="Procurement" useCache="false">
+		SELECT a.id,a.procurementTime,a.status,a.supplierId,a.storeId,a.remark,b.name,c.storeName
+		 FROM list_procurement a 
+		 left join supplier b on a.supplierId=b.id 
+		 left join stores c on a.storeId=c.id 
+		  WHERE 1=1  
+		<if test="relationMap.id != null and relationMap.id != ''">
+			AND a.id   LIKE CONCAT(CONCAT('%', #{relationMap.id}),'%') 
+		</if>
+		<if test="relationMap.status != null and relationMap.status != ''"> 
+			AND a.status= #{relationMap.status}
+		</if> 
+		<if test="relationMap.beginTime != null and relationMap.beginTime != ''"> 
+				AND DATE_FORMAT(a.procurementTime,'%Y%m%d') &gt;= DATE_FORMAT(#{relationMap.beginTime},'%Y%m%d')
+		</if>
+		<if test="relationMap.endTime != null and relationMap.endTime != ''"> 
+			AND DATE_FORMAT(a.procurementTime,'%Y%m%d') &lt;= DATE_FORMAT(#{relationMap.endTime},'%Y%m%d')
+		</if>
+		order by a.id desc
+	</select>
+	
+	<select id="procurementOrderpageInfoQuery" parameterType="PageUtilEntity" resultType="ProcurementScrapOrder" useCache="false">
+		SELECT a.*,b.categoryName from  order_procurement_scrap a
+		left join pro_category b on a.categoryId=b.categoryId 
+		 WHERE   a.objType=1  and a.objId = #{relationMap.id} 
+	</select> 
+	
+	<select id="getProcurementInfoById" parameterType="String" resultType="Procurement" useCache="false">
+		SELECT * from  list_procurement  WHERE  id = #{id} 
+	</select> 
+	
+	
+	<update id="saveProcurementCheck" parameterType="Procurement">
+ 		update list_procurement
+ 		<set>
+ 			status = #{status}, 
+ 			remark = #{remark},
+ 			updateTime=#{updateTime}
+ 		</set>
+ 		where  id = #{id} 
+ 	</update>
+ 	
+ 	<select id="getProcurementMaxNo" parameterType="java.util.Map"   resultType="String" useCache="false">
+		SELECT max(id) from  list_procurement  WHERE id like CONCAT(#{id_head},'%') and DateDiff(procurementTime,#{date})=0
+	</select> 
+ 	
+ 	<insert id="saveProcurement" parameterType="Procurement">
+ 		insert into list_procurement ( 
+ 			 id,procurementTime,status,supplierId,storeId,remark)
+ 			values( 
+ 			#{id},#{procurementTime},#{status},#{supplierId},#{storeId},#{remark})
+ 	</insert> 
+ 	
+ 	<insert id="saveProcurementOrders" parameterType="java.util.List"> 
+ 		insert into order_procurement_scrap ( 
+ 			id,categoryId,number,unit,price,totalPrice,objId,objType,remark,addTime)
+ 			values
+ 			<foreach collection="list" item="item" index="index" separator=",">
+ 			( #{item.id},#{item.categoryId},#{item.number},#{item.unit},#{item.price},#{item.totalPrice},#{item.objId},
+ 			#{item.objType},#{item.remark},#{item.addTime})
+			</foreach>
+ 	</insert>  
+ 	
+ 	<select id="getExpProcurementList" parameterType="java.util.Map" resultType="Procurement" useCache="false">
+		SELECT a.id,a.procurementTime,a.status,a.supplierId,a.storeId,a.remark,b.name,c.storeName
+		 FROM list_procurement a 
+		 left join supplier b on a.supplierId=b.id 
+		 left join stores c on a.storeId=c.id 
+		  WHERE 1=1  
+		<if test="id != null and id != ''">
+			AND a.id   LIKE CONCAT(CONCAT('%', #{id}),'%') 
+		</if>
+		<if test="status != null and status != ''"> 
+			AND a.status= #{status}
+		</if> 
+		<if test="beginTime != null and beginTime != ''"> 
+				AND DATE_FORMAT(a.procurementTime,'%Y%m%d') &gt;= DATE_FORMAT(#{beginTime},'%Y%m%d')
+		</if>
+		<if test="endTime != null and endTime != ''"> 
+			AND DATE_FORMAT(a.procurementTime,'%Y%m%d') &lt;= DATE_FORMAT(#{endTime},'%Y%m%d')
+		</if>
+		order by a.id desc
+	</select>
+	
+	
+	<select id="getPassedProcurementList" parameterType="java.util.Map"  resultType="Procurement" useCache="false">
+		SELECT id from  list_procurement  WHERE status=2 
+		<if test="type == 'inputStore'"> 
+			and id not in (select procurementId from list_inputStore)
+		</if>
+		<if test="type == 'scrap'"> 
+			and id not in (select procurementId from list_scrap)
+		</if>
+	</select> 
+	
+	
+  
+</mapper> 

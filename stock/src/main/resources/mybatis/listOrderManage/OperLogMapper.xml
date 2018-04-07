@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="OrderOperLogMapper">
+
+	<resultMap type="OderOperLog" id="OperLogResult">  
+		<result property="id" column="id" />
+		<result property="userId" column="userId" />
+		<result property="objId" column="objId" />
+		<result property="type" column="type" />
+		<result property="addTime" column="addTime" />
+		<result property="updateTime" column="updateTime" />
+	</resultMap>
+	
+    <!-- 添加审核日志信息 -->
+     <insert id="addOperLog" parameterType="OderOperLog"  useGeneratedKeys="true"  keyProperty="id">
+ 		insert into list_operLog(
+ 	     	<if test="id != null and id != ''">id,</if> 			
+ 			<if test="userId != null and userId != ''">userId,</if>
+ 			<if test="objId != null and objId != ''">objId,</if>
+ 			<if test="type != null and type != ''">type,</if>
+ 			<if test="addTime !=null">addTime</if>
+ 		)values(
+ 		     <if test="id != null and id != ''">#{id},</if>		
+ 			<if test="userId != null and userId != ''">#{userId},</if>
+ 			<if test="objId != null and objId != ''">#{objId},</if>
+ 			<if test="type != null and type != ''">#{type},</if>
+ 			<if test="addTime !=null">#{addTime}</if>
+ 		)
+ 	</insert> 
+ 	
+
+     
+  
+</mapper> 

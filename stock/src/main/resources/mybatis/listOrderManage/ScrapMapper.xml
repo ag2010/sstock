@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ScrapMapper">   
+
+	<select id="scrappageInfoQuery" parameterType="PageUtilEntity" resultType="Scrap" useCache="false">
+		select * from list_scrap 
+		  WHERE 1=1  
+		<if test="relationMap.id != null and relationMap.id != ''">
+			AND id   LIKE CONCAT(CONCAT('%', #{relationMap.id}),'%') 
+		</if>
+		<if test="relationMap.status != null and relationMap.status != ''"> 
+			AND status= #{relationMap.status}
+		</if> 
+		<if test="relationMap.beginTime != null and relationMap.beginTime != ''"> 
+				AND DATE_FORMAT(scrapTime,'%Y%m%d') &gt;= DATE_FORMAT(#{relationMap.beginTime},'%Y%m%d')
+		</if>
+		<if test="relationMap.endTime != null and relationMap.endTime != ''"> 
+			AND DATE_FORMAT(scrapTime,'%Y%m%d') &lt;= DATE_FORMAT(#{relationMap.endTime},'%Y%m%d')
+		</if>
+		order by id desc
+	</select>
+	
+	
+	<select id="scrapOrderpageInfoQuery" parameterType="PageUtilEntity" resultType="ProcurementScrapOrder" useCache="false">
+		SELECT a.*,b.categoryName from  order_procurement_scrap a
+		left join pro_category b on a.categoryId=b.categoryId 
+		 WHERE   a.objType=2  and a.objId = #{relationMap.id} 
+	</select> 
+	
+	<select id="getScrapInfoById" parameterType="String" resultType="Scrap" useCache="false">
+		SELECT * from  list_scrap  WHERE  id = #{id} 
+	</select> 
+	
+	
+	<update id="saveScrapCheck" parameterType="Scrap">
+ 		update list_scrap
+ 		<set>
+ 			status = #{status}, 
+ 			remark = #{remark},
+ 			updateTime=#{updateTime}
+ 		</set>
+ 		where  id = #{id} 
+ 	</update>
+ 	
+ 	<select id="getScrapMaxNo" parameterType="java.util.Map"   resultType="String" useCache="false">
+		SELECT max(id) from  list_scrap  WHERE id like CONCAT(#{id_head},'%') and DateDiff(scrapTime,#{date})=0
+	</select> 
+ 	
+ 	<insert id="saveScrap" parameterType="Scrap">
+ 		insert into list_scrap ( 
+ 			 id,scrapTime,status,procurementId,remark)
+ 			values( 
+ 			#{id},#{scrapTime},#{status},#{procurementId},#{remark})
+ 	</insert> 
+ 	
+  
+ 	
+ 	<select id="getExpScrapList" parameterType="java.util.Map" resultType="Scrap" useCache="false">
+		SELECT id,scrapTime,status,procurementId,remark 
+		 FROM list_scrap  
+		  WHERE 1=1  
+		<if test="id != null and id != ''">
+			AND id   LIKE CONCAT(CONCAT('%', #{id}),'%') 
+		</if>
+		<if test="status != null and status != ''"> 
+			AND status= #{status}
+		</if> 
+		<if test="beginTime != null and beginTime != ''"> 
+				AND DATE_FORMAT(scrapTime,'%Y%m%d') &gt;= DATE_FORMAT(#{beginTime},'%Y%m%d')
+		</if>
+		<if test="endTime != null and endTime != ''"> 
+			AND DATE_FORMAT(scrapTime,'%Y%m%d') &lt;= DATE_FORMAT(#{endTime},'%Y%m%d')
+		</if>
+		order by id desc
+	</select>
+	
+ 
+  
+</mapper> 

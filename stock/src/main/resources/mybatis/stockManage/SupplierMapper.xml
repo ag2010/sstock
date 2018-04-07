@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SupplierMapper">
+
+	<resultMap type="Supplier"  id="SupplierResult">
+		<result property="id" column="id" />
+		<result property="name" column="name" />
+		<result property="address" column="address" />
+		<result property="tel" column="tel" />
+		<result property="phone" column="phone" />
+		<result property="email" column="email" />
+		<result property="status" column="status" />
+	</resultMap>
+
+
+    <select id="pageInfoQuery" parameterType="PageUtilEntity"  resultType="Supplier"  useCache="false">
+		SELECT * from supplier WHERE 1=1 
+		<if test="relationMap.name!= null and  relationMap.name!= ''" >
+	<!-- 		AND name LIKE CONCAT(CONCAT('%', #{relationMap.name}),'%') -->
+	   and name like concat('%',#{relationMap.name},'%')
+		</if>
+		<if test="relationMap.status!= null and  relationMap.status!= ''" >
+			AND status=#{relationMap.status}
+		</if>
+	</select>
+	
+	<select id="findSupplierById" parameterType="String" resultType="Supplier">
+		select * from supplier where Id=#{Id}
+	</select>
+ 	
+ 	<!-- 插入用户信息 -->
+     <insert id="addSupplier" parameterType="Supplier"  useGeneratedKeys="true"  keyProperty="id">
+ 		insert into supplier(
+ 	     	<if test="id != null and id != ''">id,</if>
+ 			<if test="name != null and name != ''">name,</if>
+ 			<if test="address != null and address != ''">address,</if>
+ 			<if test="tel != null and tel != ''">tel,</if>
+ 			<if test="phone != null and phone != ''">phone,</if>
+ 			<if test="email != null and email != ''">email,</if>
+ 			<if test="status !=null and status != ''">status,</if>
+ 			<if test="addTime!=null">addTime</if>
+ 		)values(
+ 		     <if test="id != null and id != ''">#{id},</if>
+ 			<if test="name != null and name != ''">#{name},</if>
+ 			<if test="address != null and address != ''">#{address},</if>
+ 			<if test="tel != null and tel != ''">#{tel},</if>
+ 			<if test="phone != null and phone != ''">#{phone},</if>
+ 			<if test="email !=null and email != ''">#{email},</if>
+ 			<if test="status != null and status != ''">#{status},</if>
+ 			<if test="addTime!=null">#{addTime}</if>
+ 		)
+ 	</insert> 
+ 	
+ 	
+ 	<!-- 修改供货商信息 -->
+	<update id="updateSupplier"  parameterType="Supplier">
+ 		update supplier
+ 		<set>
+ 			<if test="name != null and name != ''">name = #{name},</if>
+ 			<if test="address != null and address != ''">address = #{address},</if>
+ 			<if test="tel != null and tel != ''">tel = #{tel},</if>
+ 			<if test="phone != null and phone != ''">phone = #{phone},</if>
+ 			<if test="email != null and email != ''">email = #{email},</if>
+ 			<if test="status !=null and status != ''">status =#{status},</if>
+ 		    <if test="updateTime!=null">updateTime=#{updateTime}</if>
+ 		</set>
+ 		 where id = #{id} 
+ 		<!-- <if test="id != null and id  != ''">and id = #{id}</if>  -->
+ 	</update>
+ 	
+ 	<!-- 删除供货商信息 -->
+ 	<delete id="deleteSupplier"  parameterType="String">
+ 		delete from supplier where id= #{id}
+ 	</delete>
+
+
+<!-- 修改供货商信息状态 -->
+    <update id="changeStatus">
+         update supplier
+         <set>
+          <if test="status !=null and status != ''">status =#{status},</if>
+            <if test="updateTime!=null">updateTime=#{updateTime}</if>
+         </set>
+         where id = #{id} 
+       <!--   <if test="id != null and id  != ''">and id = #{id}</if> -->
+    </update>
+    
+    <!--导出信息  -->
+    <select id="getExpSupplierList" parameterType="PageUtilEntity" resultType="Supplier" useCache="false">
+			select id,name,address,tel,phone,email,status from supplier where 1=1
+				<!-- <if test="relationMap.name!= null and  relationMap.name!= ''" >
+
+	   and name like concat('%',#{relationMap.name},'%')
+		</if>-->
+		<!-- <if test="relationMap.status!= null and  relationMap.status!= ''" >
+			AND status=#{relationMap.status}
+		</if>  -->
+	</select>
+    
+     <!-- 导入信息 -->
+ 	<insert id="impSupplierList" parameterType="java.util.List">
+ 		insert into supplier(
+ 			id,name,address,tel,phone,email,status,addTime
+ 			)
+ 			values
+ 			<foreach collection="list" item="item" index="index" separator=",">
+ 			 ( #{item.id},#{item.name},#{item.address},#{item.tel},#{item.phone},#{item.email},#{item.status},#{item.addTime})
+			</foreach>
+ 	</insert>  
+ 
+    
+    </mapper>

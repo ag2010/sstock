@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="InputStoreMapper">   
+ 	<select id="inputStorepageInfoQuery" parameterType="PageUtilEntity" resultType="InputStore" useCache="false">
+		SELECT a.id,a.inputStoreTime,a.status,a.type,a.procurementId,b.storeName,a.remark 
+		 FROM list_inputStore  a
+		 left join stores b on a.storeId=b.id
+		  WHERE 1=1  
+		<if test="relationMap.id != null and relationMap.id != ''">
+			AND a.id   LIKE CONCAT(CONCAT('%', #{relationMap.id}),'%') 
+		</if>
+		<if test="relationMap.status != null and relationMap.status != ''"> 
+			AND a.status= #{relationMap.status}
+		</if> 
+		<if test="relationMap.beginTime != null and relationMap.beginTime != ''"> 
+				AND DATE_FORMAT(a.inputStoreTime,'%Y%m%d') &gt;= DATE_FORMAT(#{relationMap.beginTime},'%Y%m%d')
+		</if>
+		<if test="relationMap.endTime != null and relationMap.endTime != ''"> 
+			AND DATE_FORMAT(a.inputStoreTime,'%Y%m%d') &lt;= DATE_FORMAT(#{relationMap.endTime},'%Y%m%d')
+		</if>
+		order by id desc
+	</select>
+	
+	
+	<select id="inputStoreOrderpageInfoQuery" parameterType="PageUtilEntity" resultType="Orders" useCache="false">
+		SELECT a.*,b.productName,b.unit,b.purchasePrice from  orders a
+		left join pro b on a.barCode=b.barCode 
+		 WHERE   a.objType=4  and a.objId = #{relationMap.id} 
+	</select> 
+	
+	<select id="getInputStoreInfoById" parameterType="String" resultType="InputStore" useCache="false">
+		SELECT * from  list_inputStore  WHERE  id = #{id} 
+	</select> 
+	
+	
+	<update id="saveInputStoreCheck" parameterType="InputStore">
+ 		update list_inputStore
+ 		<set>
+ 			status = #{status}, 
+ 			remark = #{remark},
+ 			updateTime=#{updateTime}
+ 		</set>
+ 		where  id = #{id} 
+ 	</update>
+ 	
+ 	<select id="getInputStoreMaxNo" parameterType="java.util.Map"   resultType="String" useCache="false">
+		SELECT max(id) from  list_inputStore  WHERE id like CONCAT(#{id_head},'%') and DateDiff(inputStoreTime,#{date})=0
+	</select> 
+ 	
+ 	<insert id="saveInputStore" parameterType="InputStore">
+ 		insert into list_inputStore ( 
+ 			 id,inputStoreTime,status,procurementId,remark,type,storeId)
+ 			values( 
+ 			#{id},#{inputStoreTime},#{status},#{procurementId},#{remark},#{type},#{storeId})
+ 	</insert> 
+ 	
+ 	
+ 	<insert id="saveInputStoreOrders" parameterType="java.util.List"> 
+ 		insert into orders ( 
+ 			id,barCode,number,remark,objId,objType,addTime)
+ 			values
+ 			<foreach collection="list" item="item" index="index" separator=",">
+ 			( #{item.id},#{item.barCode},#{item.number},#{item.remark},#{item.objId},
+ 			#{item.objType},#{item.addTime})
+			</foreach>
+ 	</insert>
+ 	 
+	<update id="updateProStock"  parameterType="java.util.List">   
+          <foreach collection="list" item="item" index="index" open="" close="" separator=";">  
+                update pro   
+                <set>  
+                   stock=stock+#{item.number}  
+                </set>  
+                where barCode = #{item.barCode}  
+         </foreach>  
+            
+    </update>  
+  
+ 	
+ 	<select id="getExpInputStoreList" parameterType="java.util.Map" resultType="InputStore" useCache="false">
+		SELECT a.id,a.inputStoreTime,a.status,a.type,a.procurementId,b.storeName,a.remark 
+		 FROM list_inputStore  a
+		 left join stores b on a.storeId=b.id
+		  WHERE 1=1  
+		<if test="id != null and id != ''">
+			AND a.id   LIKE CONCAT(CONCAT('%', #{id}),'%') 
+		</if>
+		<if test="status != null and status != ''"> 
+			AND a.status= #{status}
+		</if> 
+		<if test="beginTime != null and beginTime != ''"> 
+				AND DATE_FORMAT(a.inputStoreTime,'%Y%m%d') &gt;= DATE_FORMAT(#{beginTime},'%Y%m%d')
+		</if>
+		<if test="endTime != null and endTime != ''"> 
+			AND DATE_FORMAT(a.inputStoreTime,'%Y%m%d') &lt;= DATE_FORMAT(#{endTime},'%Y%m%d')
+		</if>
+		order by id desc
+	</select>
+ 
+ 	<select id="getProSupplierOptions"  resultType="SysCode" useCache="false">
+		SELECT id as codeid,name as codevalue FROM shops  where status ='1'
+	</select> 
+  
+</mapper> 

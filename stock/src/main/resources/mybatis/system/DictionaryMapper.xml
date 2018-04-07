@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="SystemDictionaryMapper" >
+
+  <resultMap id="DictionaryResult" type="Dictionary" >
+    <id column="dictionaryId" property="dictionaryId" jdbcType="VARCHAR" />
+    <result column="name" property="name" jdbcType="VARCHAR" />
+    <result column="nameEn" property="nameEn" jdbcType="VARCHAR" />
+    <result column="no" property="no" jdbcType="VARCHAR" />
+    <result column="sort" property="sort" jdbcType="INTEGER" />
+    <result column="parentId" property="parentId" jdbcType="VARCHAR" />
+    <result column="remark" property="remark" jdbcType="VARCHAR" />
+    <result column="value" property="value" jdbcType="VARCHAR" />
+    <result column="typeCode" property="typeCode" jdbcType="VARCHAR" />
+    <result column="addTime" property="addTime" jdbcType="TIMESTAMP" />
+    <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
+    <result column="status" property="status" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    dictionaryId, name, nameEn, no, sort, parentId, remark, value, typeCode, addTime,
+    updateTime, status
+  </sql>
+
+  <select id="pageInfoQuery" parameterType="PageUtilEntity" resultMap="DictionaryResult" useCache="false">
+    SELECT
+    <include refid="Base_Column_List" />
+    from sys_dictionary WHERE 1=1 AND objId is null
+    <if test="relationMap.parentId != null and relationMap.parentId != ''">
+      AND
+      parentId = #{relationMap.parentId,jdbcType=VARCHAR}
+    </if>
+    <if test="relationMap.dictionaryId != null and relationMap.dictionaryId != ''">
+      AND
+      parentId = #{relationMap.dictionaryId,jdbcType=VARCHAR}
+    </if>
+    order by sort
+  </select>
+
+  <select id="selectAllDictionary" resultMap="DictionaryResult">
+    SELECT dictionaryId, name,parentId from sys_dictionary where objId is null
+  </select>
+  
+   <select id="selectDictionaryByType" resultMap="DictionaryResult" parameterType="java.lang.String">
+    SELECT dictionaryId, name,parentId from sys_dictionary where objId is null and typeCode=#{type}
+  </select>
+
+  <select id="selectByPrimaryKey" resultMap="DictionaryResult" parameterType="java.lang.String" >
+    select
+    <include refid="Base_Column_List" />
+    from sys_dictionary
+    where dictionaryId = #{dictionaryId,jdbcType=VARCHAR} AND objId is null
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from sys_dictionary
+    where dictionaryId = #{dictionaryId,jdbcType=VARCHAR}
+  </delete>
+
+  <select id="changeStatus" parameterType="Dictionary">
+    UPDATE sys_dictionary SET
+    <if test="status != null" >
+      status = #{status,jdbcType=VARCHAR},
+    </if>
+    updateTime = now()
+    WHERE dictionaryId = #{dictionaryId,jdbcType=VARCHAR}
+  </select>
+
+  <insert id="insert" parameterType="Dictionary" >
+    insert into sys_dictionary (dictionaryId, name, nameEn,
+      no, sort, parentId, 
+      remark, value, typeCode, 
+      addTime, updateTime, status
+      )
+    values (#{dictionaryId,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR}, #{nameEn,jdbcType=VARCHAR},
+      #{no,jdbcType=VARCHAR}, #{sort,jdbcType=INTEGER}, #{parentId,jdbcType=VARCHAR},
+      #{remark,jdbcType=VARCHAR}, #{value,jdbcType=VARCHAR}, #{typeCode,jdbcType=VARCHAR},
+      now(), #{updateTime,jdbcType=TIMESTAMP}, #{status,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="Dictionary" >
+    insert into sys_dictionary
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="dictionaryId != null" >
+        dictionaryId,
+      </if>
+      <if test="name != null" >
+        name,
+      </if>
+      <if test="nameEn != null" >
+        nameEn,
+      </if>
+      <if test="no != null" >
+        no,
+      </if>
+      <if test="sort != null" >
+        sort,
+      </if>
+      <if test="parentId != null" >
+        parentId,
+      </if>
+      <if test="remark != null" >
+        remark,
+      </if>
+      <if test="value != null" >
+        value,
+      </if>
+      <if test="typeCode != null" >
+        typeCode,
+      </if>
+      <if test="addTime != null" >
+        addTime,
+      </if>
+      <if test="updateTime != null" >
+        updateTime,
+      </if>
+      <if test="status != null" >
+        status,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="dictionaryId != null" >
+        #{dictionaryId,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null" >
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="nameEn != null" >
+        #{nameEn,jdbcType=VARCHAR},
+      </if>
+      <if test="no != null" >
+        #{no,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null" >
+        #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="parentId != null" >
+        #{parentId,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null" >
+        #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="value != null" >
+        #{value,jdbcType=VARCHAR},
+      </if>
+      <if test="typeCode != null" >
+        #{typeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="addTime != null" >
+        #{addTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="status != null" >
+        #{status,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="Dictionary" >
+    update sys_dictionary
+    <set >
+      <if test="name != null" >
+        name = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="nameEn != null" >
+        nameEn = #{nameEn,jdbcType=VARCHAR},
+      </if>
+      <if test="no != null" >
+        no = #{no,jdbcType=VARCHAR},
+      </if>
+      <if test="sort != null" >
+        sort = #{sort,jdbcType=INTEGER},
+      </if>
+      <if test="parentId != null" >
+        parentId = #{parentId,jdbcType=VARCHAR},
+      </if>
+      <if test="remark != null" >
+        remark = #{remark,jdbcType=VARCHAR},
+      </if>
+      <if test="value != null" >
+        value = #{value,jdbcType=VARCHAR},
+      </if>
+      <if test="typeCode != null" >
+        typeCode = #{typeCode,jdbcType=VARCHAR},
+      </if>
+      <if test="addTime != null" >
+        addTime = #{addTime,jdbcType=TIMESTAMP},
+      </if>
+
+        updateTime = now(),
+
+      <if test="status != null" >
+        status = #{status,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where dictionaryId = #{dictionaryId,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="Dictionary" >
+    update sys_dictionary
+    set name = #{name,jdbcType=VARCHAR},
+      nameEn = #{nameEn,jdbcType=VARCHAR},
+      no = #{no,jdbcType=VARCHAR},
+      sort = #{sort,jdbcType=INTEGER},
+      parentId = #{parentId,jdbcType=VARCHAR},
+      remark = #{remark,jdbcType=VARCHAR},
+      value = #{value,jdbcType=VARCHAR},
+      typeCode = #{typeCode,jdbcType=VARCHAR},
+      addTime = #{addTime,jdbcType=TIMESTAMP},
+      updateTime = #{updateTime,jdbcType=TIMESTAMP},
+      status = #{status,jdbcType=VARCHAR}
+    where dictionaryId = #{dictionaryId,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="GoodsStoresMapper" >
+  <resultMap id="StoresMap" type="Stores" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="storeName" property="storeName" jdbcType="VARCHAR" />
+    <result column="address" property="address" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="INTEGER" />
+    <result column="addTime" property="addTime" jdbcType="TIMESTAMP" />
+    <result column="updateTime" property="updateTime" jdbcType="TIMESTAMP" />
+    <result column="productName" property="productName" />
+    <result column="barCode" property="barCode" />
+    <result column="code" property="code" />
+    <result column="unit" property="unit" />
+    <result column="stock" property="stock" />
+    <result column="categoryId" property="categoryId" />
+    <result column="categoryName" property="categoryName"/>    
+    <result column="stockTop" property="stockTop"/>    
+    <result column="stockDown" property="stockDown"/>    
+    <result column="remark" property="remark"/>    
+    <result column="expiryDate" property="expiryDate"/>    
+    <result column="name" property="name"/>    
+    
+    
+    
+    <!-- 一个仓库对应多个商品 -->   
+   <!--  <collection property="products" ofType="Product">  
+        <id column="pid" property="productId" />
+        <result column="code" property="code" />
+        <result column="productName" property="productName" />
+        <result column="barCode" property="barCode" />
+        <result column="unit" property="unit" />
+        <result column="stock" property="stock" />
+        <result column="status" property="status" />
+        <result column="categoryId" property="categoryId" />
+        <result column="stockTop" property="stockTop"/>    
+        <result column="stockDown" property="stockDown"/>    
+        <result column="expiryDate" property="expiryDate"/>
+        一个商品对应其所属的分类
+        <association property="ProductCategory" javaType="ProductCategory">
+            <id column="cid" property="id"/>
+            <result column="categoryName" property="categoryName"/>
+        </association>
+        
+    </collection> -->
+    
+  </resultMap>
+  
+  
+  
+  
+  <sql id="Stores_List" >
+    id, storeName, address, status, addTime, updateTime
+  </sql>
+  
+  <!-- 根据仓库编号查询 -->
+  <select id="findStoresById"  parameterType="java.lang.String"  resultType="Stores">
+	   select 
+	   <include refid="Stores_List" />
+	   from stores
+	   where id = #{id}
+  </select>
+  
+  
+  <!-- 根据条形码查询 -->
+  <select id="StoreInfopageInfoQuery" parameterType="PageUtilEntity" resultType="StoreInfo" useCache="false">
+      select
+	  p.productName,
+	  o.number,
+	  l.id inputId,
+	  l.inputStoreTime inputTime
+      from
+	  pro p
+     left join orders o on p.barCode = o.barCode
+     left join list_inputStore l on l.id=o.objId
+     where
+	 objType = 4  and  p.barCode=#{relationMap.barCode}
+   
+  </select>
+  
+  
+  
+  <!-- 分页查询商品库存信息 -->
+  <select id="storepageInfoQuery" parameterType="PageUtilEntity" resultType="Stores" useCache="false">
+    select
+	s.storename,
+	p.productid,
+	p.categoryId,
+	p.status,
+	p.code,
+	p.productname,
+	p.barcode,
+    p.unit,
+    p.stock,
+    pc.categoryname
+    from
+    pro p
+    left join stores s on s.id = p.storesid
+    left join pro_category pc on p.categoryid = pc.categoryid
+    where s.storeName='总仓'
+    <if test="relationMap.status != null and relationMap.status != ''">
+			AND p.status = #{relationMap.status}
+	</if>
+    <if test="relationMap.categoryId != null and relationMap.categoryId != ''">
+			AND p.categoryId = #{relationMap.categoryId}
+	</if>
+	<if test="relationMap.storesId != null and relationMap.storesId != ''">
+		AND s.id=#{relationMap.storesId}
+	</if>
+	<if test="relationMap.codeOrName != null and relationMap.codeOrName != ''">
+			AND																																										
+			(
+			p.productName LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			OR
+			p.code LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			OR
+			p.barCode LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			)
+	</if>
+    
+  </select>
+  
+  
+  <!-- 分页查询库存预警信息 -->
+  <select id="storeWarnpageInfoQuery" parameterType="PageUtilEntity" resultType="StoreWarn" useCache="false">
+    select
+	s.storename,
+	p.productid,
+	p.categoryId,
+	p.status,
+	p.code,
+	p.productname,
+	p.barcode,
+    p.unit,
+    p.stock,
+    p.stockTop,
+    p.stockDown,
+    p.remark,
+    <!-- p.expiryDate, -->
+    pc.categoryname,
+    su.name
+    from
+	 pro p
+    left join stores s on s.id = p.storesid
+    left join pro_category pc on p.categoryid = pc.categoryid
+    left join supplier su on su.id= p.supplierId
+    where 1=1
+    <if test="relationMap.status != null and relationMap.status != ''">
+			AND p.status = #{relationMap.status}
+	</if>
+    <if test="relationMap.categoryId != null and relationMap.categoryId != ''">
+			AND p.categoryId = #{relationMap.categoryId}
+	</if>
+	<if test="relationMap.storeName != null and relationMap.storeName != ''">
+		AND s.storeName=#{relationMap.storeName}
+	</if>
+    <if test="relationMap.codeOrName != null and relationMap.codeOrName != ''">
+			AND
+			(
+			p.productName LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			OR
+			p.barCode LIKE CONCAT(CONCAT('%', #{relationMap.codeOrName}),'%')
+			)
+	</if>
+  </select>
+  
+  
+  
+  <!-- 导出库存查询信息 -->
+  <select id="getExpStoresList" parameterType="java.util.Map" resultType="Stores" useCache="false">
+	select
+	s.storename,
+	p.productid,
+	p.categoryId,
+	p.status,
+	p.code,
+	p.productname,
+	p.barcode,
+    p.unit,
+    p.stock,
+    p.stockTop,
+    p.stockDown,
+    p.expiryDate,
+    pc.categoryname,
+    su.name
+    from
+    pro p
+    left join stores s on s.id = p.storesid
+    left join pro_category pc on p.categoryid = pc.categoryid
+    left join supplier su on su.id= p.supplierId
+    where s.storeName='总仓'
+      <if test="status != null and status != ''">
+			AND p.status = #{status}
+	</if>
+    <if test="categoryId != null and categoryId != ''">
+			AND p.categoryId = #{categoryId}
+	</if>
+	<if test="storesId != null and storesId != ''">
+		AND s.id=#{storesId}
+	</if>
+	<if test="codeOrName != null and codeOrName != ''">
+			AND																																										
+			(
+			p.productName LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			OR
+			p.code LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			OR
+			p.barCode LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			)
+	</if>
+  </select>
+  
+  
+  <!-- 导出库存预警信息 -->
+  <select id="getExpStoreWarnList" parameterType="java.util.Map" resultType="StoreWarn" useCache="false">
+	select
+	s.storename,
+	p.productid,
+	p.categoryId,
+	p.status,
+	p.code,
+	p.productname,
+	p.barcode,
+    p.unit,
+    p.stock,
+    p.stockTop,
+    p.stockDown,
+    p.remark,
+    pc.categoryname,
+    p.expiryDate,
+    su.name
+    from
+    pro p
+    left join stores s on s.id = p.storesid
+    left join pro_category pc on p.categoryid = pc.categoryid
+    left join supplier su on su.id= p.supplierId
+     where 1=1
+    <if test="status != null and status != ''">
+			AND p.status = #{status}
+	</if>
+    <if test="categoryId != null and categoryId != ''">
+			AND p.categoryId = #{relationMap.categoryId}
+	</if>
+	<if test="storeName != null and storeName != ''">
+		AND s.storeName=#{storeName}
+	</if>
+    <if test="codeOrName != null and codeOrName != ''">
+			AND
+			(
+			p.productName LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			OR
+			p.barCode LIKE CONCAT(CONCAT('%', #{codeOrName}),'%')
+			)
+	</if>
+  </select>
+  
+  
+  
+  
+  <!-- 分页查询仓库管理信息 -->
+  <select id="pageInfoQuery" parameterType="PageUtilEntity" resultType="Stores" useCache="false">
+	 select 
+     <include refid="Stores_List" />
+     from stores	
+     where 1=1
+    <if test="relationMap.status != null and relationMap.status != '' ">
+		AND status=#{relationMap.status}
+	</if>
+	<if test="relationMap.storeName != null and relationMap.storeName != ''">
+		AND storeName like concat(concat('%', #{relationMap.storeName}),'%')
+	</if>
+    order by FROM_UNIXTIME(addTime) desc
+  </select>
+  
+  
+  <!-- 查询商品仓库的select框信息 -->
+  <select id="getStoreNameOptions"  resultType="SysCode" useCache="false">
+		SELECT id as codeid,storeName as codevalue FROM stores   
+  </select>
+  
+  
+  <!-- 添加仓库管理信息 -->
+  <insert id="addStoresInfo" parameterType="Stores">
+		insert stores(
+			<if test="id != null and id != ''">id,</if>
+			<if test="storeName != null and storeName != ''">storeName,</if>
+			<if test="address != null and address != ''">address,</if>
+			<if test="status !=null ">status,</if>
+			<if test="addTime !=null ">addTime</if>
+		)values(
+			<if test="id != null and id != ''">#{id},</if>
+			<if test="storeName != null and storeName != ''">#{storeName},</if>
+			<if test="address != null and address != ''">#{address},</if>
+			<if test="status !=null ">#{status},</if>
+			<if test="addTime !=null ">#{addTime}</if>
+		)
+  </insert>
+  
+  
+   <!-- 修改仓库管理信息 -->
+   <update id="updateStoresInfo" parameterType="Stores">
+ 		update stores
+ 		<set>
+ 			<if test="storeName!= null and storeName != ''">storeName = #{storeName},</if>
+ 			<if test="address != null and address != ''">address = #{address},</if>
+ 			 updateTime = #{updateTime},
+ 			<if test="status != null and status == 0">status = 0</if> 
+            <if test="status != null and status == 1">status = 1</if>
+ 		</set>
+ 		where 1=1
+ 		<if test="id != null and id != ''">and id = #{id}</if>
+   </update>
+  
+  
+   <!-- 修改仓库信息状态 -->
+    <update id="changeStoresStatus">
+         update stores
+         <set>
+            <if test="status != null ">status = #{status}</if>
+            <!-- <if test="status != null and status == 1">status = 1</if> 
+            <if test="status != null and status == 0">status = 0</if> -->
+         </set>
+         where 1=1
+         <if test="id != null and id  != ''">and id = #{id}</if>
+   </update>
+  
+  
+  <!-- 根据仓库编号删除 -->
+  <delete id="deleteStoresById" parameterType="java.lang.String" >
+    delete from stores
+    where id = #{id}
+  </delete>
+  
+ 
+ 
+ 
+</mapper>

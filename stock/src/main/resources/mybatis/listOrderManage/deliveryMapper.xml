@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DeliveryMapper">
+
+	<resultMap type="Delivery" id="DeliveryResult">  
+		<result property="id" column="id" />
+		<result property="deliveryTime" column="deliveryTime" />
+		<result property="purchaser" column="purchaser" />
+		<result property="shopId" column="shopId" />
+		<result property="storeId" column="storeId" />
+		<result property="name" column="name" />
+		<result property="status" column="status" />
+	    <result property="storeName" column="storeName" />
+		<result property="purchaseId" column="purchaseId" />
+		<result property="outStoreId" column="outStoreId" />
+		<result property="remark" column="remark" />
+		<result property="addTime" column="addTime" />
+		<result property="updateTime" column="updateTime" />
+		
+  	    <association property="shop" javaType="Shops">
+					<id property="id" column="id"/>
+					<result property="name" column="name"/>
+					<result property="contacts" column="contacts" />
+		</association>
+		   <association property="store" javaType="Stores">
+					<id property="id" column="id"/>
+					<result property="storeName" column="storeName"/>
+					<result column="address" property="address" />
+		</association>
+	</resultMap>
+
+     <!-- 分页条件查询 -->
+	<select id="pageInfoQuery" parameterType="PageUtilEntity" resultType="Delivery" useCache="false">
+				       SELECT 
+								  p.id,
+								  p.addTime,
+								  h.name,
+								  p.status,
+								  t.storeName,
+								  p.purchaseId,
+								  p.outStoreId,
+								  p.remark 
+								FROM
+								  list_delivery p 
+								  LEFT JOIN shops h 
+								    ON p.shopId = h.id 
+								  LEFT JOIN stores t 
+								    ON p.storeId = t.id 
+								WHERE 1 = 1 
+		<if test="relationMap.allname != null and relationMap.allname != ''"><!-- 关键词检索 -->
+			AND
+				(
+					 p.id LIKE CONCAT(CONCAT('%', #{relationMap.allname }),'%')
+					 OR 
+					 h.name LIKE CONCAT(CONCAT('%', #{relationMap.allname }),'%')
+				)
+		</if>
+			<if test="relationMap.beginTime != null and relationMap.beginTime != ''"><!-- 开始时间检索 -->
+			AND DATE_FORMAT( p.addTime,'%Y%m%d') &gt;= DATE_FORMAT(#{relationMap.beginTime},'%Y%m%d')
+		</if>
+		<if test="relationMap.endTime != null and relationMap.endTime != ''"><!-- 结束时间检索 -->
+			AND DATE_FORMAT( p.addTime,'%Y%m%d') &lt;= DATE_FORMAT(#{relationMap.endTime},'%Y%m%d')
+		</if>
+		<if test="relationMap.status != null and relationMap.status != ''">
+			AND p.status=#{relationMap.status}
+		</if>
+		   order by  p.deliveryTime DESC 
+	</select>
+	
+	<!--  依据id查询-->
+	<select id="findDeliveryById" parameterType="String" resultType="Delivery">
+		SELECT 
+				  p.id,
+				  p.addTime,
+				  h.name,
+				  p.status,
+				  t.storeName,
+				  p.purchaseId,
+				  p.outStoreId,
+				  p.remark 
+				FROM
+				  list_delivery p 
+				  LEFT JOIN shops h 
+				    ON p.shopId = h.id 
+				  LEFT JOIN stores t 
+				    ON p.storeId = t.id
+				WHERE p.id=#{Id}
+	</select>
+	
+	 <!-- 导出订货单信息 -->
+  <select id="getExpDeliveryList" parameterType="PageUtilEntity" resultType="Delivery" useCache="false">
+						SELECT 
+								  p.id,
+								  p.addTime,
+								  h.name,
+								  p.status,
+								  t.storeName,
+								  p.purchaseId,
+								  p.outStoreId,
+								  p.remark 
+								FROM
+								  list_delivery p 
+								  LEFT JOIN shops h 
+								    ON p.shopId = h.id 
+								  LEFT JOIN stores t 
+								    ON p.storeId = t.id 
+								WHERE 1 = 1 
+  </select>
+  
+  
+   <!-- 添加配货单信息 -->
+     <insert id="addDelivery" parameterType="Delivery"  useGeneratedKeys="true"  keyProperty="id">
+ 		insert into list_delivery(
+ 	     	<if test="id != null and id != ''">id,</if>
+ 			<if test="deliveryTime != null">deliveryTime,</if>
+ 			<if test="shopId != null and shopId != ''">shopId,</if>
+ 			<if test="status != null and status != ''">status,</if>
+ 			<if test="storeId != null and storeId != ''">storeId,</if>
+ 			<if test="purchaseId != null and purchaseId != ''">purchaseId,</if>
+ 			<if test="outStoreId != null and outStoreId != ''">outStoreId,</if>
+ 			<if test="remark !=null and remark != ''">remark,</if>
+ 			<if test="addTime !=null">addTime</if>
+ 		)values(
+ 		     <if test="id != null and id != ''">#{id},</if>
+ 			<if test="deliveryTime != null">#{deliveryTime},</if>
+ 			<if test="shopId != null and shopId != ''">#{shopId},</if>
+ 			<if test="status != null and status != ''">#{status},</if>
+ 			<if test="storeId != null and storeId != ''">#{storeId},</if>
+ 			<if test="purchaseId !=null and purchaseId != ''">#{purchaseId},</if>
+ 			<if test="outStoreId !=null and outStoreId != ''">#{outStoreId},</if>
+ 			<if test="remark != null and remark != ''">#{remark},</if>
+ 			<if test="addTime !=null">#{addTime}</if>
+ 		)
+ 	</insert> 
+ 	
+
+ 	<!-- 修改配货单状态 -->
+    <update id="changeDeliveryStatus">
+         update list_delivery
+         <set>
+          <if test="status !=null and status != ''">status =#{status},</if>
+          <if test="updateTime !=null">updateTime=#{updateTime}</if>
+         </set>
+         where id = #{id} 
+       <!--   <if test="id != null and id  != ''">and id = #{id}</if> -->
+    </update>
+     
+     <select id="getDeliveryMaxNo" parameterType="java.util.Map"   resultType="String" useCache="false">
+		<!-- SELECT max(id) from  list_delivery  WHERE id like CONCAT(#{id_head},'%') and DateDiff(addTime,#{date})=0 -->
+			SELECT SUBSTRING(MAX(id),13) FROM list_delivery
+	</select> 
+     
+</mapper> 
