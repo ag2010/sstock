@@ -1,4 +1,4 @@
-package com.tj720.utils;
+package com.xxx.utils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -29,7 +29,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
  * 导出Excel公共方法
  * @version 1.0
  *
- * @author wangcp
+ * @author xxx
  *
  */
 public class ExportExcelUtil{
