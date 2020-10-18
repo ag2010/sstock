@@ -26,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 
  * 
  */
-public class POIUtil {
+public class ImportExcelUtil {
 	private static Logger logger  = Logger.getLogger(POIUtil.class);
 	private final static String XLS = "xls";
 	private final static String XLSX = "xlsx";
